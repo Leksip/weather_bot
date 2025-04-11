@@ -60,7 +60,7 @@ async def process_forecast_callback(call: CallbackQuery):
     # Получаем данные прогноза с помощью функции get_forecast()
     forecast_data = get_weather(city, days)
     print(json.dumps(forecast_data, indent=4, ensure_ascii=False))
-    current_city_name = forecast_data.get("location").get("name",city)
+    current_city_name = forecast_data.get("location").get("name", city)
 
     # Обрабатываем ошибки, если API вернул ошибку
     if forecast_data.get("error"):
@@ -72,29 +72,49 @@ async def process_forecast_callback(call: CallbackQuery):
     # Формируем текстовое сообщение на основе полученных данных
     forecast_days = forecast_data.get("forecast", {}).get("forecastday", [])
     text_message = f"<b>Прогноз погоды для {current_city_name} на {days} дн. :</b>\n\n"
-    for day in forecast_days:
-        date = day.get("date")
-        day_info = day.get("day", {})
-        avg_temp = day_info.get("avgtemp_c")
-        condition = day_info.get("condition", {}).get("text")
-        emoji = get_condition_emoji(condition)
 
-        # Преобразуем строку в объект даты и получаем день недели
-        date_obj = datetime.strptime(date, "%Y-%m-%d")
-        weekday = date_obj.strftime("%A")  # 'Monday', 'Tuesday', ...
+    if days == 1:
+        forecast_day = forecast_data.get("forecast", {}).get("forecastday", [])[0]
+        hours = forecast_day.get("hour", [])
+        now = datetime.now()
+        current_time = now.strftime("%Y-%m-%d %H:%M")
 
-        # Можно на русском:
-        weekday_ru = {
-            "Monday": "Понедельник",
-            "Tuesday": "Вторник",
-            "Wednesday": "Среда",
-            "Thursday": "Четверг",
-            "Friday": "Пятница",
-            "Saturday": "Суббота",
-            "Sunday": "Воскресенье"
-        }[weekday]
+        text_message = f"<b>Почасовой прогноз для {city} на сегодня:</b>\n\n"
 
-        text_message += f"{emoji} <b>{weekday_ru}, {date}</b>:\n{condition}, средняя температура {avg_temp}°C\n\n"
+        for hour_info in hours:
+            time_full = hour_info["time"]
+            if time_full >= current_time:
+                time = hour_info["time"].split(" ")[1]  # Получаем только время HH:MM
+                temp = hour_info["temp_c"]
+                condition = hour_info["condition"]["text"]
+                emoji = get_condition_emoji(condition)
+
+                text_message += f"{emoji} <b>{time}</b>: {condition}, {temp}°C\n\n"
+
+    else:
+        for day in forecast_days:
+            date = day.get("date")
+            day_info = day.get("day", {})
+            avg_temp = day_info.get("avgtemp_c")
+            condition = day_info.get("condition", {}).get("text")
+            emoji = get_condition_emoji(condition)
+
+            # Преобразуем строку в объект даты и получаем день недели
+            date_obj = datetime.strptime(date, "%Y-%m-%d")
+            weekday = date_obj.strftime("%A")  # 'Monday', 'Tuesday', ...
+
+            # Можно на русском:
+            weekday_ru = {
+                "Monday": "Понедельник",
+                "Tuesday": "Вторник",
+                "Wednesday": "Среда",
+                "Thursday": "Четверг",
+                "Friday": "Пятница",
+                "Saturday": "Суббота",
+                "Sunday": "Воскресенье"
+            }[weekday]
+
+            text_message += f"{emoji} <b>{weekday_ru}, {date}</b>:\n{condition}, средняя температура {avg_temp}°C\n\n"
 
     # Отправляем сообщение пользователю
     await bot.send_message(call.from_user.id, text_message, parse_mode=ParseMode.HTML)
@@ -139,7 +159,7 @@ async def enter_new_city(call: CallbackQuery):
 
 
 # Функция для отправки клавиатуры с выбором периода прогноза
-async def send_forecast_keyboard(*,message, user_id) -> None:
+async def send_forecast_keyboard(*, message, user_id) -> None:
     city = user_city.get(user_id).title()
     if not city:
         return await message.reply("Город не выбран. Введите название города.")
@@ -167,7 +187,6 @@ def get_condition_emoji(condition_text: str) -> str:
         return "❄️"
     else:
         return "🌈"
-
 
 
 # Запускаем бота
