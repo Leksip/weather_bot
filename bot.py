@@ -3,6 +3,8 @@ from aiogram.utils import executor
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ParseMode
 from config import BOT_TOKEN
 from weather import get_weather
+from datetime import datetime
+
 import json
 
 # Создаём экземпляр бота с токеном
@@ -76,7 +78,23 @@ async def process_forecast_callback(call: CallbackQuery):
         avg_temp = day_info.get("avgtemp_c")
         condition = day_info.get("condition", {}).get("text")
         emoji = get_condition_emoji(condition)
-        text_message += f"{emoji} <b>{date}</b>:\n{condition}, средняя температура {avg_temp}°C\n\n"
+
+        # Преобразуем строку в объект даты и получаем день недели
+        date_obj = datetime.strptime(date, "%Y-%m-%d")
+        weekday = date_obj.strftime("%A")  # 'Monday', 'Tuesday', ...
+
+        # Можно на русском:
+        weekday_ru = {
+            "Monday": "Понедельник",
+            "Tuesday": "Вторник",
+            "Wednesday": "Среда",
+            "Thursday": "Четверг",
+            "Friday": "Пятница",
+            "Saturday": "Суббота",
+            "Sunday": "Воскресенье"
+        }[weekday]
+
+        text_message += f"{emoji} <b>{weekday_ru}, {date}</b>:\n{condition}, средняя температура {avg_temp}°C\n\n"
 
     # Отправляем сообщение пользователю
     await bot.send_message(call.from_user.id, text_message, parse_mode=ParseMode.HTML)
