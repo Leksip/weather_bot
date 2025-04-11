@@ -84,7 +84,7 @@ async def process_forecast_callback(call: CallbackQuery):
 
     # Добавляем клавиатуру для выбора предыдущего города или нового
     if len(user_city_history.get(call.from_user.id, [])) > 0:
-        last_city = user_city_history[call.from_user.id][-1]  # Предыдущий город
+        last_city = user_city_history[call.from_user.id][-1].title()  # Предыдущий город
         keyboard = InlineKeyboardMarkup(row_width=2)
         keyboard.add(
             InlineKeyboardButton(f"Последний город: {last_city}", callback_data="previous_city"),
