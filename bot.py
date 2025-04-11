@@ -145,8 +145,11 @@ def get_condition_emoji(condition_text: str) -> str:
         return "🌧️"
     elif "облачно" in condition_text:
         return "⛅"
+    elif "снег" in condition_text:
+        return "❄️"
     else:
         return "🌈"
+
 
 
 # Запускаем бота
