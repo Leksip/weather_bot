@@ -57,6 +57,8 @@ async def process_forecast_callback(call: CallbackQuery):
 
     # Получаем данные прогноза с помощью функции get_forecast()
     forecast_data = get_weather(city, days)
+    print(json.dumps(forecast_data, indent=4, ensure_ascii=False))
+    current_city_name = forecast_data.get("location").get("name",city)
 
     # Обрабатываем ошибки, если API вернул ошибку
     if forecast_data.get("error"):
@@ -67,7 +69,7 @@ async def process_forecast_callback(call: CallbackQuery):
 
     # Формируем текстовое сообщение на основе полученных данных
     forecast_days = forecast_data.get("forecast", {}).get("forecastday", [])
-    text_message = f"<b>Прогноз погоды для {city} на {days} дн. :</b>\n\n"
+    text_message = f"<b>Прогноз погоды для {current_city_name} на {days} дн. :</b>\n\n"
     for day in forecast_days:
         date = day.get("date")
         day_info = day.get("day", {})
@@ -120,7 +122,7 @@ async def enter_new_city(call: CallbackQuery):
 
 # Функция для отправки клавиатуры с выбором периода прогноза
 async def send_forecast_keyboard(*,message, user_id) -> None:
-    city = user_city.get(user_id)
+    city = user_city.get(user_id).title()
     if not city:
         return await message.reply("Город не выбран. Введите название города.")
 
